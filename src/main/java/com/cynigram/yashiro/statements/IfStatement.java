@@ -1,4 +1,4 @@
-package com.cynigram.yashiro.statement;
+package com.cynigram.yashiro.statements;
 
 import com.cynigram.yashiro.ast.*;
 import com.cynigram.yashiro.parser.StatementParser;
@@ -13,7 +13,7 @@ import java.util.List;
 
 public class IfStatement
 {
-    public class CondNode extends Node
+    public static class CondNode extends Node
     {
         private final ExprNode condition;
         private final BodyListNode body;
@@ -65,7 +65,7 @@ public class IfStatement
         }
     }
 
-    public class IfStmtNode extends StmtNode
+    public static class IfStmtNode extends StmtNode
     {
         private final List<CondNode> conditions;
 
@@ -109,7 +109,7 @@ public class IfStatement
         }
     }
 
-    public class IfStmtNodeMap implements Map<StatementMatchMap, IfStmtNode>
+    protected static class IfStmtNodeMap implements Map<StatementMatchMap, IfStmtNode>
     {
         @Override
         public IfStmtNode map (StatementMatchMap statementMatchMap)
@@ -133,7 +133,7 @@ public class IfStatement
     public StatementParser getParser ()
     {
         return ParserBuilders
-                .statementWithBody("yashiro.ext.std", "if").contains(ParserBuilders.expr("cond"))
+                .statementWithBody("com.cynigram.yashiro.statement", "if").contains(ParserBuilders.expr("cond"))
                 .also("elif").contains(ParserBuilders.expr("cond")).many().optional()
                 .also("else").optional()
                 .mapWith(new IfStmtNodeMap());

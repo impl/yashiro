@@ -110,11 +110,15 @@ public class StatementTerminusParserBuilder
 
     protected Set<String> statementsFrom (Integer index)
     {
-        Set<String> statements = Sets.newHashSet();
-
         Iterator<RepeatableStatementWithBodyParserBuilder> it = subordinates.listIterator(index == null ? 0 : index);
 
-        /* Retrieve the statement at the current index. */
+        /* If there are no elements in the list, we can just return with the terminus. */
+        if (!it.hasNext())
+            return Collections.singleton("end" + parent.getCallables().getName());
+
+        Set<String> statements = Sets.newHashSet();
+
+        /* Retrieve the statements at the current index. */
         RepeatableStatementWithBodyParserBuilder current = it.next();
 
         /* If we're at the beginning of the list or the current statement is repeatable,

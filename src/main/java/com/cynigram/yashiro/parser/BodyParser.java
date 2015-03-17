@@ -23,7 +23,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BodyParser
 {
-    private HashMap<String, StatementParser> statementParsers = Maps.newHashMap();
+    private ListMultimap<String, StatementParser> statementParsers = Multimaps.newListMultimap(Maps.<String, Collection<StatementParser>>newHashMap(), new Supplier<List<StatementParser>>()
+    {
+        @Override
+        public List<StatementParser> get()
+        {
+            return Lists.newLinkedList();
+        }
+    });
+
     private ListMultimap<String, StatementParser> statementParsersWithShortNames = Multimaps.newListMultimap(Maps.<String, Collection<StatementParser>>newHashMap(), new Supplier<List<StatementParser>>()
     {
         @Override
@@ -48,13 +56,8 @@ public class BodyParser
         checkNotNull(statementParsers);
 
         for (StatementParser parser : statementParsers) {
-            /* Full name map. */
             String fullName = parser.getPackage() + "." + parser.getName();
-
-            Preconditions.checkArgument(!this.statementParsers.containsKey(fullName), "cannot register multiple statements with name '" + fullName + "'");
             this.statementParsers.put(fullName, parser);
-
-            /* Short name map. Names are added in order. */
             this.statementParsersWithShortNames.put(parser.getName(), parser);
         }
     }
@@ -80,7 +83,7 @@ public class BodyParser
 
                         return body;
                     }
-                }.sequence(strip().optional(Stripping.NONE), TemplateTerminals.data().many1(), strip().optional(Stripping.NONE))));
+                }.sequence(strip().optional(Stripping.NONE), Parsers.or(TemplateTerminals.data(), Parsers.EOF.retn("")).many1(), strip().optional(Stripping.NONE))));
     }
 
     Parser<VarNode> variable ()
@@ -96,29 +99,24 @@ public class BodyParser
                     public Parser<? extends StmtNode> map (List<String> names)
                     {
                         String name = Joiner.on('.').join(names);
+                        boolean useShortNames = names.size() == 1;
 
                         List<Parser<? extends StmtNode>> parsers = Lists.newLinkedList();
 
-                        if (names.size() == 1) {
-                            /* Any short names? */
-                            List<StatementParser> candidates = statementParsersWithShortNames.get(name);
-                            if (candidates != null) {
-                                for (StatementParser candidate : candidates) {
-                                    ContImpl cont = new ContImpl(candidate, lazy, true);
-                                    parsers.add(candidate.parser(cont));
-                                }
-                            }
-                        } else {
-                            /* Any long names? */
-                            StatementParser candidate = statementParsers.get(name);
-                            if (candidate != null) {
-                                ContImpl cont = new ContImpl(candidate, lazy, false);
-                                parsers.add(candidate.parser(cont));
+                        ListMultimap<String, StatementParser> candidateMap = useShortNames
+                                ? statementParsersWithShortNames
+                                : statementParsers;
+
+                        List<StatementParser> candidates = candidateMap.get(name);
+                        if (candidates != null) {
+                            for (StatementParser candidate : candidates) {
+                                ContImpl cont = new ContImpl(candidate, lazy, useShortNames);
+                                parsers.add(Marker.mark(candidate.parser(cont)));
                             }
                         }
 
                         return !parsers.isEmpty()
-                                ? Parsers.or(parsers)
+                                ? Parsers.longest(parsers)
                                 : Parsers.<StmtNode>unexpected("statement '" + name + "' is not registered");
                     }
                 });
@@ -131,8 +129,10 @@ public class BodyParser
 
         return Mapper.curry(BodyListNode.class).sequence(
                 Parsers2.filter(
-                        Parsers.or(data(), variableParser, statementBlock().next(Parsers.or(haltingClauseParsers)
-                                .peek()).retn(null), statementParser).many1(),
+                        Parsers.or(
+                                data(), variableParser,
+                                statementBlock().next(Parsers.or(haltingClauseParsers).peek()).retn(null),
+                                statementParser).many1(),
                         Predicates.notNull()));
     }
 

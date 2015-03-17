@@ -75,6 +75,22 @@ public final class ContentParserBuilder
         return this;
     }
 
+    public ContentParserBuilder id (final String group, String name)
+    {
+        for (int i = 0; i < out.size(); i++) {
+            out.set(i, out.get(i).followedBy(TemplateTerminals.id(name)).map(new Map<ListMultimap<String, ExprNode>, ListMultimap<String, ExprNode>>() {
+                @Override
+                public ListMultimap<String, ExprNode> map (ListMultimap<String, ExprNode> from)
+                {
+                    from.put(group, null);
+                    return from;
+                }
+            }));
+        }
+
+        return this;
+    }
+
     public ContentParserBuilder callable (String group)
     {
         return expr(group, ExpressionParser.argumentList().between(TemplateTerminals.term("("), TemplateTerminals.term(")")));

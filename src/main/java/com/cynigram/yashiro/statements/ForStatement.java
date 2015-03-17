@@ -1,4 +1,4 @@
-package com.cynigram.yashiro.statement;
+package com.cynigram.yashiro.statements;
 
 import com.cynigram.yashiro.ast.BodyListNode;
 import com.cynigram.yashiro.ast.ExprNode;
@@ -13,7 +13,7 @@ import org.codehaus.jparsec.functors.Map;
 
 public class ForStatement
 {
-    public class ForStmtNode extends StmtNode
+    public static class ForStmtNode extends StmtNode
     {
         private final ExprNode item;
         private final ExprNode sequence;
@@ -93,7 +93,7 @@ public class ForStatement
         }
     }
 
-    protected class ForStmtNodeMap implements Map<StatementMatchMap, ForStmtNode>
+    protected static class ForStmtNodeMap implements Map<StatementMatchMap, ForStmtNode>
     {
         @Override
         public ForStmtNode map (StatementMatchMap statementMatchMap)
@@ -113,8 +113,9 @@ public class ForStatement
     public StatementParser getParser ()
     {
         return ParserBuilders
-                .statementWithBody("yashiro.ext.std", "for")
-                .contains(ParserBuilders.expr("item", ExpressionParser.anyOf(ExpressionParser.name())).id("in").expr("sequence").select(ParserBuilders.id("recursive").optional()))
+                .statementWithBody("com.cynigram.yashiro.statement", "for")
+                .contains(ParserBuilders.expr("item", ExpressionParser.anyOf(ExpressionParser.name())).id("in").expr("sequence").select(ParserBuilders
+                        .id("recursive", "recursive").optional()))
                 .also("else").optional()
                 .mapWith(new ForStmtNodeMap());
     }

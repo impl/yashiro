@@ -1,8 +1,8 @@
 package com.cynigram.yashiro.ast;
 
-import java.io.Serializable;
-
 import com.google.common.collect.MutableClassToInstanceMap;
+
+import java.io.Serializable;
 
 public abstract class Node implements Serializable
 {

@@ -33,7 +33,7 @@ public final class ExpressionParser
 
     static Parser<Unary<ExprNode>> unary (String operator, Parser<?> token)
     {
-        return token.next(Mapper.<ExprNode> curry(OpNode.Unary.class, operator).unary());
+        return token.next(Mapper.<ExprNode>curry(OpNode.Unary.class, operator).unary());
     }
 
     static <T extends ExprNode> Parser<Binary<ExprNode>> ifElse (Parser<T> e)
@@ -83,7 +83,7 @@ public final class ExpressionParser
         return Mapper.<ExprNode>curry(OpNode.Binary.class, ".").postfix(term("."), NAME_PARSER);
     }
 
-    static <T extends ExprNode> Parser<List<InvArgNode>> argumentList (Parser<T> e)
+    static <T extends ExprNode> Parser<InvArgListNode> argumentList (Parser<T> e)
     {
         Parser<InvArgNode> namedArg = Mapper.<InvArgNode>curry(InvArgNode.Named.class).sequence(NAME_PARSER, term("="), e);
         Parser<InvArgNode> arg = namedArg.or(Mapper.curry(InvArgNode.Positional.class).sequence(e));
@@ -100,7 +100,8 @@ public final class ExpressionParser
                         Parsers2.list(keywordArgs),
                         Parsers2.list(arg.followedBy(term(",")).optional())));
         parser = Parsers2.filter(parser, Predicates.<InvArgNode>notNull());
-        return parser;
+
+        return Mapper.curry(InvArgListNode.class).sequence(parser);
     }
 
     static <T extends ExprNode> Parser<Unary<ExprNode>> invocationWithParens (Parser<T> e)
@@ -215,8 +216,9 @@ public final class ExpressionParser
         return Marker.mark(set(one()));
     }
 
-    public static Parser<InvNode> argumentList () {
-        return Marker.mark(Mapper.curry(InvNode.class).sequence(argumentList(one())));
+    public static Parser<InvArgListNode> argumentList ()
+    {
+        return Marker.mark(argumentList(one()));
     }
 
     public static Parser<ExprNode> anyOf (Parser<? extends ExprNode> parser)

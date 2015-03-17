@@ -1,12 +1,12 @@
 package com.cynigram.yashiro.parser;
 
-import java.io.Serializable;
-
+import com.cynigram.yashiro.ast.Node;
+import com.google.common.base.Objects;
 import org.codehaus.jparsec.Parser;
 import org.codehaus.jparsec.Parsers;
 import org.codehaus.jparsec.misc.Mapper;
 
-import com.cynigram.yashiro.ast.Node;
+import java.io.Serializable;
 
 public final class Marker implements Serializable
 {
@@ -34,5 +34,13 @@ public final class Marker implements Serializable
     public int getIndex ()
     {
         return index;
+    }
+
+    @Override
+    public String toString ()
+    {
+        return Objects.toStringHelper(this)
+                .add("index", index)
+                .toString();
     }
 }

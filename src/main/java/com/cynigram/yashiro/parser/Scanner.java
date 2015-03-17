@@ -65,8 +65,7 @@ class Scanner
     static final Parser<String> DOUBLE_QUOTE_STRING_SCANNER = Scanners.pattern(Patterns.regex(DOUBLE_QUOTE_STRING_PATTERN), "string").source().between(Scanners.isChar('"'), Scanners.isChar('"'));
 
     static final Parser<?> TOKENIZER = Parsers.or(
-            Terminals.DecimalLiteral.TOKENIZER,
-            Terminals.LongLiteral.TOKENIZER,
+            Parsers.longer(Terminals.LongLiteral.TOKENIZER, Terminals.DecimalLiteral.TOKENIZER),
             Scanners.notAmong("+-[](){}", Joiner.on(", ").join(OPERATORS)).peek().next(TERMS.tokenizer()),
             SINGLE_QUOTE_STRING_SCANNER.map(Maps2.UNESCAPE_MAP),
             DOUBLE_QUOTE_STRING_SCANNER.map(Maps2.UNESCAPE_MAP));

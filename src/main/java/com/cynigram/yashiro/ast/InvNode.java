@@ -2,14 +2,12 @@ package com.cynigram.yashiro.ast;
 
 import com.google.common.base.Objects;
 
-import java.util.List;
-
 public final class InvNode extends ExprNode
 {
     private final ExprNode callable;
-    private final List<InvArgNode> arguments;
+    private final InvArgListNode arguments;
 
-    public InvNode (ExprNode callable, List<InvArgNode> arguments)
+    public InvNode (ExprNode callable, InvArgListNode arguments)
     {
         this.callable = callable;
         this.arguments = arguments;
@@ -20,7 +18,7 @@ public final class InvNode extends ExprNode
         return callable;
     }
 
-    public List<InvArgNode> getArguments ()
+    public InvArgListNode getArguments ()
     {
         return arguments;
     }

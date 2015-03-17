@@ -1,8 +1,7 @@
 package com.cynigram.yashiro.parser.statement;
 
-import org.codehaus.jparsec.Parser;
-
 import com.cynigram.yashiro.ast.ExprNode;
+import org.codehaus.jparsec.Parser;
 
 public final class ParserBuilders
 {
@@ -31,9 +30,25 @@ public final class ParserBuilders
         return new ContentParserBuilder().id(name);
     }
 
-    public static ContentParserBuilder callable (String name) { return new ContentParserBuilder().callable(name); }
+    public static ContentParserBuilder id (String group, String name)
+    {
+        return new ContentParserBuilder().id(group, name);
+    }
 
-    public static ContentParserBuilder term (String term) { return new ContentParserBuilder().term(term); }
+    public static ContentParserBuilder callable (String name)
+    {
+        return new ContentParserBuilder().callable(name);
+    }
+
+    public static ContentParserBuilder term (String term)
+    {
+        return new ContentParserBuilder().term(term);
+    }
+
+    public static ContentParserBuilder select (ContentParserBuilder... options)
+    {
+        return new ContentParserBuilder().select(options);
+    }
 
     private ParserBuilders ()
     {}
