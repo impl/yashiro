@@ -19,13 +19,13 @@ public class BodyListNode extends Node
     }
 
     @Override
-    public int hashCode()
+    public int hashCode ()
     {
         return children.hashCode();
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals (Object obj)
     {
         if (obj == null) {
             return false;
@@ -40,7 +40,7 @@ public class BodyListNode extends Node
     }
 
     @Override
-    public String toString()
+    public String toString ()
     {
         return Objects.toStringHelper(this)
                 .add("children", children)

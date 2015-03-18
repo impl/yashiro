@@ -96,7 +96,7 @@ public final class ExpressionParser
         parser = Parsers2.collect(
                 arg.sepEndBy(term(",")),
                 Parsers.or(
-                        Parsers2.collectN1(manyArgs, term(",").next(namedArg.sepBy(term(","))).optional(), term(",").next(keywordArgs).optional()),
+                        Parsers2.collectN1(manyArgs, term(",").next(namedArg.sepBy1(term(","))).atomic().optional(), term(",").next(keywordArgs).optional()),
                         Parsers2.list(keywordArgs),
                         Parsers2.list(arg.followedBy(term(",")).optional())));
         parser = Parsers2.filter(parser, Predicates.<InvArgNode>notNull());

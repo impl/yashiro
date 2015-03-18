@@ -58,13 +58,13 @@ public class OpNode extends ExprNode
     }
 
     @Override
-    public int hashCode()
+    public int hashCode ()
     {
         return Objects.hashCode(operator, operands);
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals (Object obj)
     {
         if (obj == null) {
             return false;
@@ -79,7 +79,7 @@ public class OpNode extends ExprNode
     }
 
     @Override
-    public String toString()
+    public String toString ()
     {
         return Objects.toStringHelper(this)
                 .add("operator", operator)

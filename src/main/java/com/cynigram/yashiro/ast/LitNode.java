@@ -66,13 +66,13 @@ public class LitNode<T> extends ExprNode
     }
 
     @Override
-    public int hashCode()
+    public int hashCode ()
     {
         return value.hashCode();
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals (Object obj)
     {
         if (obj == null) {
             return false;
@@ -87,7 +87,7 @@ public class LitNode<T> extends ExprNode
     }
 
     @Override
-    public String toString()
+    public String toString ()
     {
         return Objects.toStringHelper(this)
                 .add("value", value)

@@ -34,16 +34,18 @@ public final class ContentParserBuilder
 
     /* We can't use #constant(result()) here, because it won't regenerate the list every
      * time the parser runs. */
-    private List<Parser<ListMultimap<String, ExprNode>>> out = Lists.newArrayList(Parsers.always().map(new Map<Object, ListMultimap<String, ExprNode>>() {
-        @Override
-        public ListMultimap<String, ExprNode> map (Object o)
-        {
-            return result();
-        }
-    }));
+    private List<Parser<ListMultimap<String, ExprNode>>> out = Lists.newArrayList();
 
     ContentParserBuilder()
-    {}
+    {
+        out.add(Parsers.always().map(new Map<Object, ListMultimap<String, ExprNode>>() {
+            @Override
+            public ListMultimap<String, ExprNode> map (Object o)
+            {
+                return result();
+            }
+        }));
+    }
 
     public <T extends ExprNode> ContentParserBuilder expr (final String group, Parser<T> parser)
     {

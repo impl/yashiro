@@ -17,13 +17,13 @@ public final class PNode extends ExprNode
     }
 
     @Override
-    public int hashCode()
+    public int hashCode ()
     {
         return child.hashCode();
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals (Object obj)
     {
         if (obj == null) {
             return false;
@@ -38,7 +38,7 @@ public final class PNode extends ExprNode
     }
 
     @Override
-    public String toString()
+    public String toString ()
     {
         return Objects.toStringHelper(this)
                 .add("child", child)

@@ -22,13 +22,13 @@ public class InvArgNode extends ExprNode
         }
 
         @Override
-        public int hashCode()
+        public int hashCode ()
         {
             return Objects.hashCode(name, getValue());
         }
 
         @Override
-        public boolean equals(Object obj)
+        public boolean equals (Object obj)
         {
             if (obj == null) {
                 return false;
@@ -43,7 +43,7 @@ public class InvArgNode extends ExprNode
         }
 
         @Override
-        public String toString()
+        public String toString ()
         {
             return Objects.toStringHelper(this)
                     .add("name", name)
@@ -89,13 +89,13 @@ public class InvArgNode extends ExprNode
     }
 
     @Override
-    public int hashCode()
+    public int hashCode ()
     {
         return value.hashCode();
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals (Object obj)
     {
         if (obj == null) {
             return false;
@@ -110,7 +110,7 @@ public class InvArgNode extends ExprNode
     }
 
     @Override
-    public String toString()
+    public String toString ()
     {
         return Objects.toStringHelper(this)
                 .add("value", value)

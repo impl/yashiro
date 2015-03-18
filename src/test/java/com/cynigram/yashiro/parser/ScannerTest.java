@@ -9,12 +9,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static com.cynigram.yashiro.parser.TemplateTerminals.id;
-import static com.cynigram.yashiro.parser.TemplateTerminals.term;
+import static com.cynigram.yashiro.parser.TemplateTerminals.*;
 
 @RunWith(JUnit4.class)
 public class ScannerTest
 {
+    protected static final Environment ENVIRONMENT = new EnvironmentBuilder().build();
+    protected static final Scanner SCANNER = new Scanner(ENVIRONMENT);
+
     @Test
     public void testNameScannerParsesUsualNames ()
     {
@@ -42,33 +44,76 @@ public class ScannerTest
     }
 
     @Test
-    public void testTokenizerParsersManyTerms ()
+    public void testTokenizerParsesManyTerms ()
     {
-        assertScan(
+        assertScanOne(
                 "for i in hello.world:",
                 id("for"), id("i"), id("in"), id("hello"), term("."), id("world"), term(":"));
     }
 
     @Test
-    public void testNullMethodTernaryCast ()
+    public void testTokenizerParsesIntegers ()
     {
-        Assert.assertEquals(null, new X().retn(false));
+        Assert.assertEquals((long)1, Scanner.TOKENIZER.parse("1"));
     }
 
-    public static class X
+    @Test
+    public void testTokenizerParsesDecimals ()
     {
-        public Integer retn (boolean stmt)
-        {
-            return stmt ? (Integer)42 : null;
-        }
+        Assert.assertEquals(Tokens.decimalLiteral("1.0"), Scanner.TOKENIZER.parse("1.0"));
     }
 
-    protected static void assertScan (String test, Parser<?>... expected)
+    @Test
+    public void testScannerParsesVariableBlocks ()
+    {
+        assertScanBody("{{ expr }}",
+                data(), strip(), variableBlock(), id("expr"), variableBlock(), strip());
+    }
+
+    @Test
+    public void testScannerParsersStatementBlocks ()
+    {
+        assertScanBody("{% stmt %}",
+                data(), strip(), statementBlock(), id("stmt"), statementBlock(), strip());
+    }
+
+    @Test
+    public void testScannerParsersRawBlocks ()
+    {
+        assertScanBody("{% raw %}{% notastatement %}{% endraw %}",
+                data(), strip(), statementBlock(), id("raw"), statementBlock(), strip(),
+                data() /* i.e., %{ notastatement %} */,
+                strip(), statementBlock(), id("endraw"), statementBlock(), strip());
+    }
+
+    @Test
+    public void testScannerParsesWhitespaceQualifiers ()
+    {
+        assertScanBody("{%+ stmt -%}",
+                data(), strip(false), statementBlock(), id("stmt"), statementBlock(), strip(true));
+    }
+
+    @Test
+    public void testEnvironmentIsUsedByScanner ()
+    {
+        Assert.assertEquals(SCANNER.getEnvironment(), ENVIRONMENT);
+    }
+
+    protected static void assertScanOne (String test, Parser<?>... expected)
     {
         try {
             make(expected).from(Scanner.LINE_SCANNER).parse(test);
         } catch (ParserException pe) {
-            Assert.fail("Scanning failed with " + pe.getMessage());
+            Assert.fail("Scanning failed: " + pe.getMessage());
+        }
+    }
+
+    protected static void assertScanBody (String test, Parser<?>... expected)
+    {
+        try {
+            make(expected).from(SCANNER.scanner()).parse(test);
+        } catch (ParserException pe) {
+            Assert.fail("Scanning failed: " + pe.getMessage());
         }
     }
 

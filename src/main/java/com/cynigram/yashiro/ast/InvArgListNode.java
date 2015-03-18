@@ -6,14 +6,14 @@ import java.util.List;
 
 public class InvArgListNode extends ExprNode
 {
-    private final List<InvArgNode> children;
+    private final List<? extends InvArgNode> children;
 
-    public InvArgListNode (List<InvArgNode> children)
+    public InvArgListNode (List<? extends InvArgNode> children)
     {
         this.children = children;
     }
 
-    public List<InvArgNode> getChildren ()
+    public List<? extends InvArgNode> getChildren ()
     {
         return children;
     }
