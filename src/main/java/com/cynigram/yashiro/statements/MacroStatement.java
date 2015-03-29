@@ -1,16 +1,22 @@
 package com.cynigram.yashiro.statements;
 
-import com.cynigram.yashiro.ast.BodyListNode;
-import com.cynigram.yashiro.ast.IdNode;
-import com.cynigram.yashiro.ast.InvArgListNode;
-import com.cynigram.yashiro.ast.StmtNode;
+import com.cynigram.yashiro.ast.*;
 import com.cynigram.yashiro.parser.ExpressionParser;
+import com.cynigram.yashiro.parser.Parsers2;
 import com.cynigram.yashiro.parser.StatementParser;
 import com.cynigram.yashiro.parser.statement.ParserBuilders;
 import com.cynigram.yashiro.parser.statement.StatementMatch;
 import com.cynigram.yashiro.parser.statement.StatementMatchMap;
 import com.google.common.base.Objects;
+import com.google.common.base.Predicates;
+import org.codehaus.jparsec.Parser;
+import org.codehaus.jparsec.Parsers;
 import org.codehaus.jparsec.functors.Map;
+import org.codehaus.jparsec.misc.Mapper;
+
+import java.util.List;
+
+import static com.cynigram.yashiro.parser.TagParsers.term;
 
 public class MacroStatement
 {
@@ -92,9 +98,41 @@ public class MacroStatement
 
     public StatementParser getParser ()
     {
+        // The syntax for declaring a function is slightly different than the function for calling
+        // a function, and we must restrict parameter declarations to simple names (instead of any
+        // expression).
+        Parser<List<InvArgNode>> positionalParser = Mapper.<InvArgNode>curry(InvArgNode.Positional.class)
+                .sequence(ExpressionParser.name().notFollowedBy(term("=")).atomic())
+                .sepBy1(term(","));
+        Parser<List<InvArgNode>> namedParser = Mapper.<InvArgNode>curry(InvArgNode.Named.class)
+                .sequence(ExpressionParser.name(), term("=").next(ExpressionParser.one()))
+                .sepBy1(term(","));
+        Parser<InvArgNode> manyArgsParser = Mapper.<InvArgNode>curry(InvArgNode.ManyArgs.class)
+                .sequence(term("*").next(ExpressionParser.name()));
+        Parser<InvArgNode> keywordArgsParser = Mapper.<InvArgNode>curry(InvArgNode.KeywordArgs.class)
+                .sequence(term("**").next(ExpressionParser.name()));
+
+        Parser<List<InvArgNode>> argsParser = Parsers2.filter(
+                Parsers.or(
+                        Parsers2.list(keywordArgsParser),
+                        Parsers2.list(manyArgsParser, term(",").next(keywordArgsParser).optional()),
+                        Parsers2.collectN(
+                                namedParser,
+                                term(",").next(manyArgsParser).atomic().optional(),
+                                term(",").next(keywordArgsParser).atomic().optional()
+                        ),
+                        Parsers2.collect(
+                                positionalParser,
+                                term(",").next(namedParser).atomic().optional(),
+                                term(",").next(Parsers2.list(manyArgsParser)).atomic().optional(),
+                                term(",").next(Parsers2.list(keywordArgsParser)).atomic().optional()
+                        )),
+                Predicates.<InvArgNode>notNull());
+        Parser<InvArgListNode> argListParser = Mapper.curry(InvArgListNode.class).sequence(argsParser.between(term("("), term(")")));
+
         return ParserBuilders
-                .statementWithBody("com.cynigram.yashiro.statement", "macro").contains(
-                        ParserBuilders.expr("name", ExpressionParser.name()).callable("arguments"))
+                .statementWithBody("com.cynigram.yashiro.statements", "macro").contains(
+                        ParserBuilders.expr("name", ExpressionParser.name()).expr("arguments", argListParser))
                 .mapWith(new FuncStmtNodeMap());
     }
 }

@@ -5,7 +5,7 @@ import org.codehaus.jparsec.Token;
 
 import java.util.List;
 
-import static com.cynigram.yashiro.parser.TemplateTerminals.term;
+import static com.cynigram.yashiro.parser.TagParsers.term;
 
 public class TemplateParser
 {

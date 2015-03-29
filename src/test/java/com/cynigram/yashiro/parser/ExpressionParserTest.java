@@ -31,6 +31,15 @@ public class ExpressionParserTest
     }
 
     @Test
+    public void testUnaryOperators ()
+    {
+        ExprNode expected;
+
+        expected = new OpNode.Unary("not", new IdNode("knot"));
+        Assert.assertEquals(expected, PARSER.parse("not knot"));
+    }
+
+    @Test
     public void testIfElse ()
     {
         ExprNode expected;
@@ -169,6 +178,13 @@ public class ExpressionParserTest
         );
         Assert.assertEquals(expected, PARSER.parse("hello.false(2+2, false=false, *flax, **kwargs)"));
 
+        expected = new InvNode(
+                new IdNode("eval"),
+                new InvArgListNode(Lists.newArrayList(
+                        new InvArgNode.Positional(new IdNode("a")),
+                        new InvArgNode.Positional(new OpNode.Binary("*", new IdNode("b"), new IdNode("c"))))));
+        Assert.assertEquals(expected, PARSER.parse("eval(a, b *c)"));
+
         expected = new OpNode.Binary(
                 ".",
                 new InvNode(
@@ -188,6 +204,12 @@ public class ExpressionParserTest
                         new InvArgListNode(Collections.<InvArgNode>emptyList())),
                 new IdNode("quux"));
         Assert.assertEquals(expected, PARSER.parse("foo.bar(2+i.x()).baz().quux"));
+    }
+
+    @Test(expected = ParserException.class)
+    public void testMethodInvocationWithInvalidSeparatorSyntaxFails ()
+    {
+        PARSER.parse("invalid(a, b, , *c)");
     }
 
     @Test

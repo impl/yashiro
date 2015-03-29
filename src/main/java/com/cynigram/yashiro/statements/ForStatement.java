@@ -113,9 +113,11 @@ public class ForStatement
     public StatementParser getParser ()
     {
         return ParserBuilders
-                .statementWithBody("com.cynigram.yashiro.statement", "for")
-                .contains(ParserBuilders.expr("item", ExpressionParser.anyOf(ExpressionParser.name())).id("in").expr("sequence").select(ParserBuilders
-                        .id("recursive", "recursive").optional()))
+                .statementWithBody("com.cynigram.yashiro.statements", "for")
+                .contains(ParserBuilders
+                        .expr("item", ExpressionParser.anyOf(ExpressionParser.name()))
+                        .word("in").expr("sequence")
+                        .select(ParserBuilders.wordWithGroup("recursive", "recursive").optional()))
                 .also("else").optional()
                 .mapWith(new ForStmtNodeMap());
     }

@@ -103,7 +103,7 @@ public class CallStatement
     public StatementParser getParser ()
     {
         return ParserBuilders
-                .statementWithBody("com.cynigram.yashiro.statement", "call").contains(
+                .statementWithBody("com.cynigram.yashiro.statements", "call").contains(
                         ParserBuilders
                                 .select(ParserBuilders.callable("caller-arguments").optional())
                                 .expr("callable", ExpressionParser.name()).callable("callable-arguments"))

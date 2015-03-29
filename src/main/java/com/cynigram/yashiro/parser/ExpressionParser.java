@@ -6,7 +6,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.jparsec.OperatorTable;
 import org.codehaus.jparsec.Parser;
 import org.codehaus.jparsec.Parsers;
-import org.codehaus.jparsec.Terminals;
 import org.codehaus.jparsec.functors.Binary;
 import org.codehaus.jparsec.functors.Unary;
 import org.codehaus.jparsec.misc.Mapper;
@@ -14,16 +13,15 @@ import org.codehaus.jparsec.misc.Mapper;
 import java.util.Collections;
 import java.util.List;
 
-import static com.cynigram.yashiro.parser.TemplateTerminals.id;
-import static com.cynigram.yashiro.parser.TemplateTerminals.term;
+import static com.cynigram.yashiro.parser.TagParsers.term;
 
 public final class ExpressionParser
 {
-    static Parser<LitNode.Bool> BOOLEAN_PARSER = Parsers.or(id("true").retn(LitNode.Bool.TRUE), id("false").retn(LitNode.Bool.FALSE));
-    static Parser<LitNode.Null> NULL_PARSER = id("none").retn(LitNode.Null.NULL);
-    static Parser<LitNode.Dec> DECIMAL_PARSER = Mapper.curry(LitNode.Dec.class).sequence(Terminals.DecimalLiteral.PARSER);
-    static Parser<LitNode.Int> INTEGER_PARSER = Mapper.curry(LitNode.Int.class).sequence(Terminals.LongLiteral.PARSER);
-    static Parser<IdNode> NAME_PARSER = Mapper.curry(IdNode.class).sequence(Terminals.Identifier.PARSER);
+    static Parser<LitNode.Bool> BOOLEAN_PARSER = Parsers.or(TagParsers.name("true").retn(LitNode.Bool.TRUE), TagParsers.name("false").retn(LitNode.Bool.FALSE));
+    static Parser<LitNode.Null> NULL_PARSER = TagParsers.name("none").retn(LitNode.Null.NULL);
+    static Parser<LitNode.Dec> DECIMAL_PARSER = Mapper.curry(LitNode.Dec.class).sequence(TagParsers.decimal());
+    static Parser<LitNode.Int> INTEGER_PARSER = Mapper.curry(LitNode.Int.class).sequence(TagParsers.integer());
+    static Parser<IdNode> NAME_PARSER = Mapper.curry(IdNode.class).sequence(TagParsers.name());
     static Parser<LitNode.Str> STRING_PARSER = Mapper.curry(LitNode.Str.class).sequence(Parsers.tokenType(String.class, "string"));
 
     static Parser<Binary<ExprNode>> binary (String operator, Parser<?> token)
@@ -38,9 +36,9 @@ public final class ExpressionParser
 
     static <T extends ExprNode> Parser<Binary<ExprNode>> ifElse (Parser<T> e)
     {
-        return Mapper
-                .<ExprNode>curry(OpNode.Trinary.class, "if").infix(id("if"), e, id("else"))
-                .or(binary("if", id("if")));
+        return Mapper.<ExprNode>curry(OpNode.Trinary.class, "if")
+                .infix(TagParsers.name("if"), e, TagParsers.name("else"))
+                .or(binary("if", TagParsers.name("if")));
     }
 
     static <T extends ExprNode> Parser<ExprNode> paren (Parser<T> e)
@@ -145,19 +143,19 @@ public final class ExpressionParser
                 .infixl(binary("+", term("+")), 80)
                 .infixl(binary("-", term("-")), 80)
                 .infixl(binary("~", term("~")), 70)
-                .infixl(binary("not in", id("not", "in")), 60)
-                .infixl(binary("in", id("in")), 60)
-                .infixl(binary("is not", id("is", "not")), 60)
-                .infixl(binary("is", id("is")), 60)
+                .infixl(binary("not in", TagParsers.name("not", "in")), 60)
+                .infixl(binary("in", TagParsers.name("in")), 60)
+                .infixl(binary("is not", TagParsers.name("is", "not")), 60)
+                .infixl(binary("is", TagParsers.name("is")), 60)
                 .infixl(binary("<", term("<")), 60)
                 .infixl(binary("<=", term("<=")), 60)
                 .infixl(binary(">", term(">")), 60)
                 .infixl(binary(">=", term(">=")), 60)
                 .infixl(binary("==", term("==")), 60)
                 .infixl(binary("!=", term("!=")), 60)
-                .prefix(unary("not", id("not")), 50)
-                .infixl(binary("and", id("and")), 40)
-                .infixl(binary("or", id("or")), 30)
+                .prefix(unary("not", TagParsers.name("not")), 50)
+                .infixl(binary("and", TagParsers.name("and")), 40)
+                .infixl(binary("or", TagParsers.name("or")), 30)
                 .infixl(ifElse(lazy), 20)
                 .build(parser);
 

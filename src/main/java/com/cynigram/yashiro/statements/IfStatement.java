@@ -133,7 +133,7 @@ public class IfStatement
     public StatementParser getParser ()
     {
         return ParserBuilders
-                .statementWithBody("com.cynigram.yashiro.statement", "if").contains(ParserBuilders.expr("cond"))
+                .statementWithBody("com.cynigram.yashiro.statements", "if").contains(ParserBuilders.expr("cond"))
                 .also("elif").contains(ParserBuilders.expr("cond")).many().optional()
                 .also("else").optional()
                 .mapWith(new IfStmtNodeMap());

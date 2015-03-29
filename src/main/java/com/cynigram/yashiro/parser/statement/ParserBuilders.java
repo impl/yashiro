@@ -25,14 +25,14 @@ public final class ParserBuilders
         return new ContentParserBuilder().expr(group, parser);
     }
 
-    public static ContentParserBuilder id (String name)
+    public static ContentParserBuilder word (String... name)
     {
-        return new ContentParserBuilder().id(name);
+        return new ContentParserBuilder().word(name);
     }
 
-    public static ContentParserBuilder id (String group, String name)
+    public static ContentParserBuilder wordWithGroup (String group, String... name)
     {
-        return new ContentParserBuilder().id(group, name);
+        return new ContentParserBuilder().wordWithGroup(group, name);
     }
 
     public static ContentParserBuilder callable (String name)
@@ -40,9 +40,9 @@ public final class ParserBuilders
         return new ContentParserBuilder().callable(name);
     }
 
-    public static ContentParserBuilder term (String term)
+    public static ContentParserBuilder sym (String symbol)
     {
-        return new ContentParserBuilder().term(term);
+        return new ContentParserBuilder().sym(symbol);
     }
 
     public static ContentParserBuilder select (ContentParserBuilder... options)

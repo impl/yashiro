@@ -11,14 +11,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import org.codehaus.jparsec.Parser;
 import org.codehaus.jparsec.Parsers;
-import org.codehaus.jparsec.Terminals;
 import org.codehaus.jparsec.functors.Map;
 import org.codehaus.jparsec.misc.Mapper;
 
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static com.cynigram.yashiro.parser.TemplateTerminals.*;
+import static com.cynigram.yashiro.parser.TagParsers.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BodyParser
@@ -41,7 +40,7 @@ public class BodyParser
         }
     });
 
-    static final Parser<List<String>> NAME_PARSER = Terminals.Identifier.PARSER.sepBy1(term("."));
+    static final Parser<List<String>> NAME_PARSER = TagParsers.name().sepBy1(term("."));
     static final Parser<String> NAME_PARSER_COMBINED = NAME_PARSER.map(
             new Map<List<String>, String>() {
                 @Override
@@ -83,7 +82,7 @@ public class BodyParser
 
                         return body;
                     }
-                }.sequence(strip().optional(Stripping.NONE), Parsers.or(TemplateTerminals.data(), Parsers.EOF.retn("")).many1(), strip().optional(Stripping.NONE))));
+                }.sequence(strip().optional(Stripping.NONE), Parsers.or(TagParsers.data(), Parsers.EOF.retn("")).many1(), strip().optional(Stripping.NONE))));
     }
 
     Parser<VarNode> variable ()
@@ -179,13 +178,13 @@ public class BodyParser
 
             Iterator<String> it = names.iterator();
 
-            Parser<?> longNameParser = id(it.next());
+            Parser<?> longNameParser = TagParsers.name(it.next());
             while (it.hasNext())
-                longNameParser.next(term(".")).next(id(it.next()));
+                longNameParser.next(term(".")).next(TagParsers.name(it.next()));
 
             Parser<String> longNameParserR = longNameParser.retn(parser.getPackage() + "." + name);
 
-            return allowShortName ? Parsers.or(longNameParserR, id(name).retn(name)) : longNameParserR;
+            return allowShortName ? Parsers.or(longNameParserR, TagParsers.name(name).retn(name)) : longNameParserR;
         }
 
         @Override

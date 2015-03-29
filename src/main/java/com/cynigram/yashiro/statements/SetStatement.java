@@ -142,18 +142,17 @@ public class SetStatement
 
     public StatementParser getParser ()
     {
-        return ParserBuilders.statement("com.cynigram.yashiro.statement", "set")
+        return ParserBuilders.statement("com.cynigram.yashiro.statements", "set")
                 .contains(
                         ParserBuilders
                                 .expr("names", ExpressionParser.anyOf(ExpressionParser.name()))
-                                .term("=")
-                                .expr("expression", ExpressionParser.any()))
+                                .sym("=").expr("expression", ExpressionParser.any()))
                 .mapWith(new SetStmtNodeMap());
     }
 
     public StatementParser getParserWithBody ()
     {
-        return ParserBuilders.statementWithBody("com.cynigram.yashiro.statement", "set")
+        return ParserBuilders.statementWithBody("com.cynigram.yashiro.statements", "set")
                 .contains(ParserBuilders.expr("name", ExpressionParser.name()))
                 .mapWith(new SetStmtWithBodyNodeMap());
     }

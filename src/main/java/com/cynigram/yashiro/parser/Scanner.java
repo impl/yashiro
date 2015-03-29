@@ -15,8 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
 
-import static com.cynigram.yashiro.parser.TemplateTerminals.fragment;
-
 class Scanner
 {
     static class ScannerTag {
@@ -40,8 +38,9 @@ class Scanner
         }
     }
 
-    static final Parser<Void> NAME_SCANNER = Scanners
-            .pattern(Patterns.isChar(CharPredicates2.IS_IDENTIFIER_START).next(Patterns.isChar(CharPredicates2.IS_IDENTIFIER_CONTINUE).many()), "name");
+    static final Parser<Void> NAME_SCANNER = Scanners.pattern(
+            Patterns.isChar(CharPredicates2.IS_IDENTIFIER_START).next(Patterns.isChar(CharPredicates2.IS_IDENTIFIER_CONTINUE).many()),
+            "name");
 
     static final String[] OPERATORS = new String[] {
         "/", "//", "*", "%", "**", "~",
@@ -53,10 +52,17 @@ class Scanner
         "+", "-", "[", "]", "(", ")", "{", "}",
     };
 
-    static final Terminals TERMS = Terminals.caseSensitive(
-            NAME_SCANNER.source(),
-            ObjectArrays.concat(OPERATORS, MATCHING_OPERATORS, String.class),
-            new String[] {});
+    static final Parser<Void> TERM_SCANNER;
+    static {
+        /* Sorted by length. */
+        SortedMap<String, Parser<Void>> scanners = Maps.newTreeMap(Ordering.natural().reverse());
+
+        for (String operator : ObjectArrays.concat(OPERATORS, MATCHING_OPERATORS, String.class)) {
+            scanners.put(operator, operator.length() == 1 ? Scanners.isChar(operator.charAt(0)) : Scanners.string(operator));
+        }
+
+        TERM_SCANNER = Parsers.or(scanners.values());
+    }
 
     static final java.util.regex.Pattern SINGLE_QUOTE_STRING_PATTERN = java.util.regex.Pattern.compile("((\\\\.)|[^'\\\\])*", java.util.regex.Pattern.DOTALL);
     static final Parser<String> SINGLE_QUOTE_STRING_SCANNER = Scanners.pattern(Patterns.regex(SINGLE_QUOTE_STRING_PATTERN), "string").source().between(Scanners.isChar('\''), Scanners.isChar('\''));
@@ -65,8 +71,9 @@ class Scanner
     static final Parser<String> DOUBLE_QUOTE_STRING_SCANNER = Scanners.pattern(Patterns.regex(DOUBLE_QUOTE_STRING_PATTERN), "string").source().between(Scanners.isChar('"'), Scanners.isChar('"'));
 
     static final Parser<?> TOKENIZER = Parsers.or(
-            Parsers.longer(Terminals.LongLiteral.TOKENIZER, Terminals.DecimalLiteral.TOKENIZER),
-            Scanners.notAmong("+-[](){}", Joiner.on(", ").join(OPERATORS)).peek().next(TERMS.tokenizer()),
+            Parsers.longer(Terminals.LongLiteral.TOKENIZER.map(Tag.INTEGER.map()), Scanners.DECIMAL.map(Tag.DECIMAL.map())),
+            Scanners.notAmong("+-[](){}", Joiner.on(", ").join(OPERATORS)).peek().next(TERM_SCANNER.source().map(Tag.TERM.map())),
+            NAME_SCANNER.source().map(Tag.NAME.map()),
             SINGLE_QUOTE_STRING_SCANNER.map(Maps2.UNESCAPE_MAP),
             DOUBLE_QUOTE_STRING_SCANNER.map(Maps2.UNESCAPE_MAP));
 
@@ -113,17 +120,19 @@ class Scanner
 
     static Parser<Token> stripScanner (boolean stripByDefault)
     {
-        return Scanners.among("+-", "whitespace stripping identifiers").source().optional(stripByDefault ? "-" : "+").map(fragment(TemplateTag.STRIP)).token();
+        return Scanners
+                .among("+-", "whitespace stripping identifiers").source().optional(stripByDefault ? "-" : "+")
+                .map(Tag.STRIP.mapFromString()).token();
     }
 
-    static Parser<List<Token>> blockScanner (String start, String end, TemplateTag tag, boolean lstripBlocksByDefault, boolean trimBlocksByDefault)
+    static Parser<List<Token>> blockScanner (String start, String end, Tag<String> tag, boolean lstripBlocksByDefault, boolean trimBlocksByDefault)
     {
         Parser<List<Token>> startParser = Parsers2.flipped(
-                Scanners.string(start).source().map(fragment(tag)).token(),
+                Scanners.string(start).source().map(tag.map()).token(),
                 stripScanner(lstripBlocksByDefault).followedBy(WHITESPACE_SCANNER.optional()));
         Parser<List<Token>> endParser = Parsers2.flipped(
                 WHITESPACE_SCANNER.optional().next(stripScanner(trimBlocksByDefault)),
-                Scanners.string(end).source().map(fragment(tag)).token());
+                Scanners.string(end).source().map(tag.map()).token());
 
         return Parsers2.collect(startParser, blockScanner0(end), endParser);
     }
@@ -134,16 +143,16 @@ class Scanner
         return Parsers2.filter(Parsers2.collect(
                 /* {% raw %} */
                 Parsers2.flipped(
-                    Scanners.string(start).source().map(fragment(TemplateTag.STATEMENT_BLOCK)).token(),
+                    Scanners.string(start).source().map(Tag.STATEMENT_BLOCK.map()).token(),
                     stripScanner(lstripBlocksByDefault)),
                 Parsers2.list(
                     Scanners.string("raw")
                             .between(WHITESPACE_SCANNER.optional(), WHITESPACE_SCANNER.optional())
-                            .retn(Tokens.identifier("raw"))
+                            .retn(Tag.NAME.apply("raw"))
                             .token()),
                 Parsers2.flipped(
                     stripScanner(trimBlocksByDefault),
-                    Scanners.string(end).source().map(fragment(TemplateTag.STATEMENT_BLOCK)).token()),
+                    Scanners.string(end).source().map(Tag.STATEMENT_BLOCK.map()).token()),
 
                 /* Data. */
                 Parsers2.list(
@@ -155,39 +164,40 @@ class Scanner
                             .next(Scanners.among("+-").optional())
                             .next(Scanners.string(end))
                             .not()
-                            .next(Scanners.ANY_CHAR).many().source().map(fragment(TemplateTag.DATA)).token()),
+                            .next(Scanners.ANY_CHAR).many().source().map(Tag.DATA.map()).token()),
 
                 /* {% endraw %} */
                 Parsers2.flipped(
-                    Scanners.string(start).source().map(fragment(TemplateTag.STATEMENT_BLOCK)).token(),
+                    Scanners.string(start).source().map(Tag.STATEMENT_BLOCK.map()).token(),
                     stripScanner(lstripBlocksByDefault)),
                 Parsers2.list(
                     Scanners.string("endraw")
                         .between(WHITESPACE_SCANNER.optional(), WHITESPACE_SCANNER.optional())
-                        .retn(Tokens.identifier("endraw"))
+                        .retn(Tag.NAME.apply("endraw"))
                         .token()),
                 Parsers2.flipped(
                     stripScanner(trimBlocksByDefault),
-                    Scanners.string(end).source().map(fragment(TemplateTag.STATEMENT_BLOCK)).token())),
+                    Scanners.string(end).source().map(Tag.STATEMENT_BLOCK.map()).token())),
                 Predicates.<Token>notNull());
     }
 
     private static Parser<Token> tokened (String s)
     {
         Parser<?> scanner = s.length() == 1 ? Scanners.isChar(s.charAt(0)) : Scanners.string(s);
-        return scanner.retn(Tokens.reserved(s)).token();
+        return scanner.retn(Tag.TERM.apply(s)).token();
     }
 
     static ScannerTag blockScannerTag (String start, String end, boolean lstripBlocksByDefault, boolean trimBlocksByDefault)
     {
-        return new ScannerTag(Scanners.string(start),
+        return new ScannerTag(
+                Scanners.string(start),
                 rawScanner(start, end, lstripBlocksByDefault, trimBlocksByDefault)
-                        .or(blockScanner(start, end, TemplateTag.STATEMENT_BLOCK, lstripBlocksByDefault, trimBlocksByDefault)));
+                        .or(blockScanner(start, end, Tag.STATEMENT_BLOCK, lstripBlocksByDefault, trimBlocksByDefault)));
     }
 
     static ScannerTag variableScannerTag (String start, String end, boolean lstripBlocksByDefault, boolean trimBlocksByDefault)
     {
-        return new ScannerTag(Scanners.string(start), blockScanner(start, end, TemplateTag.VARIABLE_BLOCK, lstripBlocksByDefault, trimBlocksByDefault));
+        return new ScannerTag(Scanners.string(start), blockScanner(start, end, Tag.VARIABLE_BLOCK, lstripBlocksByDefault, trimBlocksByDefault));
     }
 
     static ScannerTag commentScannerTag (String start, String end)
@@ -212,13 +222,11 @@ class Scanner
         return new ScannerTag(
                 startParser,
                 Parsers2.collectN2(
-                        Parsers.constant("!").map(fragment(TemplateTag.STRIP)).token(),
-                        startParser.retn(prefix).map(fragment(TemplateTag.STATEMENT_BLOCK)).token(),
+                        Parsers.constant("!").map(Tag.STRIP.mapFromString()).token(),
+                        startParser.retn(prefix).map(Tag.STATEMENT_BLOCK.map()).token(),
                         LINE_SCANNER,
-                        endParser.retn("").map(fragment(TemplateTag.STATEMENT_BLOCK)).token(),
-                        Parsers.constant("+").map(fragment(TemplateTag.STRIP)).token()
-                )
-        );
+                        endParser.retn("").map(Tag.STATEMENT_BLOCK.map()).token(),
+                        Parsers.constant("+").map(Tag.STRIP.mapFromString()).token()));
     }
 
     private final Environment environment;
@@ -263,7 +271,7 @@ class Scanner
             {
                 return input.getLookahead();
             }
-        })).not().next(Scanners.ANY_CHAR).many().source().map(fragment(TemplateTag.DATA)).token();
+        })).not().next(Scanners.ANY_CHAR).many().source().map(Tag.DATA.map()).token();
 
         return Parsers2.flatten(Parsers2.collectN1(anyData, anyTag.optional()).many());
     }

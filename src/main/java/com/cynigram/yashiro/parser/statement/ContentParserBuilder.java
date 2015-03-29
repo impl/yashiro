@@ -2,7 +2,6 @@ package com.cynigram.yashiro.parser.statement;
 
 import com.cynigram.yashiro.ast.ExprNode;
 import com.cynigram.yashiro.parser.ExpressionParser;
-import com.cynigram.yashiro.parser.TemplateTerminals;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -16,6 +15,9 @@ import org.codehaus.jparsec.misc.Mapper;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
+import static com.cynigram.yashiro.parser.TagParsers.name;
+import static com.cynigram.yashiro.parser.TagParsers.term;
 
 public final class ContentParserBuilder
 {
@@ -68,19 +70,19 @@ public final class ContentParserBuilder
         return expr(group, ExpressionParser.one());
     }
 
-    public ContentParserBuilder id (String name)
+    public ContentParserBuilder word (String... name)
     {
         for (int i = 0; i < out.size(); i++) {
-            out.set(i, out.get(i).followedBy(TemplateTerminals.id(name)));
+            out.set(i, out.get(i).followedBy(name(name)));
         }
 
         return this;
     }
 
-    public ContentParserBuilder id (final String group, String name)
+    public ContentParserBuilder wordWithGroup (final String group, String... name)
     {
         for (int i = 0; i < out.size(); i++) {
-            out.set(i, out.get(i).followedBy(TemplateTerminals.id(name)).map(new Map<ListMultimap<String, ExprNode>, ListMultimap<String, ExprNode>>() {
+            out.set(i, out.get(i).followedBy(name(name)).map(new Map<ListMultimap<String, ExprNode>, ListMultimap<String, ExprNode>>() {
                 @Override
                 public ListMultimap<String, ExprNode> map (ListMultimap<String, ExprNode> from)
                 {
@@ -95,13 +97,13 @@ public final class ContentParserBuilder
 
     public ContentParserBuilder callable (String group)
     {
-        return expr(group, ExpressionParser.argumentList().between(TemplateTerminals.term("("), TemplateTerminals.term(")")));
+        return expr(group, ExpressionParser.argumentList().between(term("("), term(")")));
     }
 
-    public ContentParserBuilder term (String term)
+    public ContentParserBuilder sym (String symbol)
     {
         for (int i = 0; i < out.size(); i++) {
-            out.set(i, out.get(i).followedBy(TemplateTerminals.term(term)));
+            out.set(i, out.get(i).followedBy(term(symbol)));
         }
 
         return this;

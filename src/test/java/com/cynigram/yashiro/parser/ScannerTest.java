@@ -2,14 +2,13 @@ package com.cynigram.yashiro.parser;
 
 import org.codehaus.jparsec.Parser;
 import org.codehaus.jparsec.Parsers;
-import org.codehaus.jparsec.Tokens;
 import org.codehaus.jparsec.error.ParserException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static com.cynigram.yashiro.parser.TemplateTerminals.*;
+import static com.cynigram.yashiro.parser.TagParsers.*;
 
 @RunWith(JUnit4.class)
 public class ScannerTest
@@ -39,8 +38,8 @@ public class ScannerTest
     @Test
     public void testTokenizerParsesOneTerm ()
     {
-        Assert.assertEquals(Tokens.reserved("~"), Scanner.TOKENIZER.parse("~"));
-        Assert.assertEquals(Tokens.identifier("for"), Scanner.TOKENIZER.parse("for"));
+        Assert.assertEquals(Tag.TERM.apply("~"), Scanner.TOKENIZER.parse("~"));
+        Assert.assertEquals(Tag.NAME.apply("for"), Scanner.TOKENIZER.parse("for"));
     }
 
     @Test
@@ -48,49 +47,51 @@ public class ScannerTest
     {
         assertScanOne(
                 "for i in hello.world:",
-                id("for"), id("i"), id("in"), id("hello"), term("."), id("world"), term(":"));
+                name("for"), name("i"), name("in"), name("hello"), term("."), name("world"), term(":"));
     }
 
     @Test
     public void testTokenizerParsesIntegers ()
     {
-        Assert.assertEquals((long)1, Scanner.TOKENIZER.parse("1"));
+        Assert.assertEquals(Tag.INTEGER.apply(1L), Scanner.TOKENIZER.parse("1"));
     }
 
     @Test
     public void testTokenizerParsesDecimals ()
     {
-        Assert.assertEquals(Tokens.decimalLiteral("1.0"), Scanner.TOKENIZER.parse("1.0"));
+        Assert.assertEquals(Tag.DECIMAL.apply("1.0"), Scanner.TOKENIZER.parse("1.0"));
     }
 
     @Test
     public void testScannerParsesVariableBlocks ()
     {
         assertScanBody("{{ expr }}",
-                data(), strip(), variableBlock(), id("expr"), variableBlock(), strip());
+                data(), strip(), variableBlock(), name("expr"), variableBlock(), strip());
     }
 
     @Test
     public void testScannerParsersStatementBlocks ()
     {
         assertScanBody("{% stmt %}",
-                data(), strip(), statementBlock(), id("stmt"), statementBlock(), strip());
+                data(), strip(), statementBlock(), name("stmt"), statementBlock(), strip());
     }
 
     @Test
     public void testScannerParsersRawBlocks ()
     {
         assertScanBody("{% raw %}{% notastatement %}{% endraw %}",
-                data(), strip(), statementBlock(), id("raw"), statementBlock(), strip(),
+                data(), strip(), statementBlock(), name("raw"), statementBlock(), strip(),
                 data() /* i.e., %{ notastatement %} */,
-                strip(), statementBlock(), id("endraw"), statementBlock(), strip());
+                strip(), statementBlock(), name("endraw"), statementBlock(), strip());
     }
 
     @Test
     public void testScannerParsesWhitespaceQualifiers ()
     {
+        System.out.println(SCANNER.scanner().parse("{%+ stmt -%}"));
         assertScanBody("{%+ stmt -%}",
-                data(), strip(false), statementBlock(), id("stmt"), statementBlock(), strip(true));
+                data(), strip(false), statementBlock(), name("stmt"), statementBlock(), strip(true)
+        );
     }
 
     @Test
