@@ -3,6 +3,7 @@ package com.cynigram.yashiro.statements;
 import com.cynigram.yashiro.ast.*;
 import com.cynigram.yashiro.parser.ExpressionParser;
 import com.cynigram.yashiro.parser.Parsers2;
+import com.cynigram.yashiro.parser.Statement;
 import com.cynigram.yashiro.parser.StatementParser;
 import com.cynigram.yashiro.parser.statement.ParserBuilders;
 import com.cynigram.yashiro.parser.statement.StatementMatch;
@@ -18,13 +19,13 @@ import java.util.List;
 
 import static com.cynigram.yashiro.parser.TagParsers.term;
 
-public class MacroStatement
+public class MacroStatement implements Statement
 {
     public static class FuncStmtNode extends StmtNode
     {
-        private IdNode name;
-        private InvArgListNode arguments;
-        private BodyListNode body;
+        private final IdNode name;
+        private final InvArgListNode arguments;
+        private final BodyListNode body;
 
         public FuncStmtNode (IdNode name, InvArgListNode arguments, BodyListNode body)
         {
@@ -96,7 +97,7 @@ public class MacroStatement
         }
     }
 
-    public StatementParser getParser ()
+    public StatementParser parser ()
     {
         // The syntax for declaring a function is slightly different than the function for calling
         // a function, and we must restrict parameter declarations to simple names (instead of any

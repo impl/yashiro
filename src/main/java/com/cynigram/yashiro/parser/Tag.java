@@ -6,10 +6,14 @@ import org.codehaus.jparsec.Token;
 import org.codehaus.jparsec.TokenMap;
 import org.codehaus.jparsec.functors.Map;
 
+import java.io.Serializable;
+
 import static org.codehaus.jparsec.misc.Mapper._;
 
-public class Tag<T>
+public class Tag<T extends Serializable> implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     public static final class StripTag extends Tag<Stripping>
     {
         protected StripTag ()
@@ -70,7 +74,8 @@ public class Tag<T>
 
     Map<T, Fragment<T>> map ()
     {
-        return new Map<T, Fragment<T>>() {
+        return new Map<T, Fragment<T>>()
+        {
             @Override
             public Fragment<T> map (T from)
             {
@@ -87,7 +92,8 @@ public class Tag<T>
 
     public Parser<T> parser ()
     {
-        return Parsers.token(new TokenMap<T>() {
+        return Parsers.token(new TokenMap<T>()
+        {
             @Override
             public T map (Token token)
             {
@@ -116,7 +122,8 @@ public class Tag<T>
 
     public <U extends T> Parser<?> parserOf (final U expected)
     {
-        return _(Parsers.token(new TokenMap<U>() {
+        return _(Parsers.token(new TokenMap<U>()
+        {
             @Override
             public U map (Token token)
             {
@@ -144,18 +151,18 @@ public class Tag<T>
     }
 
     @SafeVarargs
-    public final <U extends T> Parser<?> parserOf (final U... name)
+    public final <U extends T> Parser<?> parserOf (final U... expected)
     {
-        if (name.length == 0) {
+        if (expected.length == 0) {
             return Parsers.never();
-        } else if (name.length == 1) {
-            return parserOf(name[0]);
+        } else if (expected.length == 1) {
+            return parserOf(expected[0]);
         }
 
-        Parser<?>[] parsers = new Parser<?>[name.length];
-        for (int i = 0; i < name.length; i++)
+        Parser<?>[] parsers = new Parser<?>[expected.length];
+        for (int i = 0; i < expected.length; i++)
         {
-            parsers[i] = parserOf(name[i]);
+            parsers[i] = parserOf(expected[i]);
         }
         return Parsers.sequence(parsers);
     }

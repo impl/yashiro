@@ -1,6 +1,7 @@
 package com.cynigram.yashiro.statements;
 
 import com.cynigram.yashiro.ast.*;
+import com.cynigram.yashiro.parser.Statement;
 import com.cynigram.yashiro.parser.StatementParser;
 import com.cynigram.yashiro.parser.statement.ParserBuilders;
 import com.cynigram.yashiro.parser.statement.StatementMatch;
@@ -11,7 +12,7 @@ import org.codehaus.jparsec.functors.Map;
 
 import java.util.List;
 
-public class IfStatement
+public class IfStatement implements Statement
 {
     public static class CondNode extends Node
     {
@@ -130,7 +131,7 @@ public class IfStatement
         }
     }
 
-    public StatementParser getParser ()
+    public StatementParser parser ()
     {
         return ParserBuilders
                 .statementWithBody("com.cynigram.yashiro.statements", "if").contains(ParserBuilders.expr("cond"))

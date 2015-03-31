@@ -93,7 +93,8 @@ public class BodyParser
     Parser<StmtNode> statement (final Parser<BodyListNode> lazy)
     {
         return NAME_PARSER.peek().next(
-                new Map<List<String>, Parser<? extends StmtNode>>() {
+                new Map<List<String>, Parser<? extends StmtNode>>()
+                {
                     @Override
                     public Parser<? extends StmtNode> map (List<String> names)
                     {
@@ -114,9 +115,10 @@ public class BodyParser
                             }
                         }
 
-                        return !parsers.isEmpty()
-                                ? Parsers.longest(parsers)
-                                : Parsers.<StmtNode>unexpected("statement '" + name + "' is not registered");
+                        if (parsers.isEmpty())
+                            throw new RuntimeException("statement '" + name + "' is not registered");
+
+                        return Parsers.longest(parsers);
                     }
                 });
     }

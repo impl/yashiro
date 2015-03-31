@@ -88,7 +88,6 @@ public class ScannerTest
     @Test
     public void testScannerParsesWhitespaceQualifiers ()
     {
-        System.out.println(SCANNER.scanner().parse("{%+ stmt -%}"));
         assertScanBody("{%+ stmt -%}",
                 data(), strip(false), statementBlock(), name("stmt"), statementBlock(), strip(true)
         );

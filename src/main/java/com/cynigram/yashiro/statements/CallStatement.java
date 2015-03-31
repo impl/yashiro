@@ -5,6 +5,7 @@ import com.cynigram.yashiro.ast.IdNode;
 import com.cynigram.yashiro.ast.InvArgListNode;
 import com.cynigram.yashiro.ast.StmtNode;
 import com.cynigram.yashiro.parser.ExpressionParser;
+import com.cynigram.yashiro.parser.Statement;
 import com.cynigram.yashiro.parser.StatementParser;
 import com.cynigram.yashiro.parser.statement.ParserBuilders;
 import com.cynigram.yashiro.parser.statement.StatementMatch;
@@ -12,14 +13,14 @@ import com.cynigram.yashiro.parser.statement.StatementMatchMap;
 import com.google.common.base.Objects;
 import org.codehaus.jparsec.functors.Map;
 
-public class CallStatement
+public class CallStatement implements Statement
 {
     public static class InvStmtNode extends StmtNode
     {
-        private InvArgListNode callerArguments;
-        private IdNode callable;
-        private InvArgListNode callableArguments;
-        private BodyListNode body;
+        private final InvArgListNode callerArguments;
+        private final IdNode callable;
+        private final InvArgListNode callableArguments;
+        private final BodyListNode body;
 
         public InvStmtNode (InvArgListNode callerArguments, IdNode callable, InvArgListNode callableArguments, BodyListNode body)
         {
@@ -90,17 +91,17 @@ public class CallStatement
         @Override
         public InvStmtNode map (StatementMatchMap statementMatchMap)
         {
-            StatementMatch call = statementMatchMap.one("call");
+            StatementMatch callMatch = statementMatchMap.one("call");
 
             return new InvStmtNode(
-                    (InvArgListNode)call.getContentMatchMap().oneOrNull("caller-arguments"),
-                    (IdNode)call.getContentMatchMap().one("callable"),
-                    (InvArgListNode)call.getContentMatchMap().one("callable-arguments"),
-                    call.getBody());
+                    (InvArgListNode)callMatch.getContentMatchMap().oneOrNull("caller-arguments"),
+                    (IdNode)callMatch.getContentMatchMap().one("callable"),
+                    (InvArgListNode)callMatch.getContentMatchMap().one("callable-arguments"),
+                    callMatch.getBody());
         }
     }
 
-    public StatementParser getParser ()
+    public StatementParser parser ()
     {
         return ParserBuilders
                 .statementWithBody("com.cynigram.yashiro.statements", "call").contains(

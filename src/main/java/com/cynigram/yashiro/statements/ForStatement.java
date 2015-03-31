@@ -4,6 +4,7 @@ import com.cynigram.yashiro.ast.BodyListNode;
 import com.cynigram.yashiro.ast.ExprNode;
 import com.cynigram.yashiro.ast.StmtNode;
 import com.cynigram.yashiro.parser.ExpressionParser;
+import com.cynigram.yashiro.parser.Statement;
 import com.cynigram.yashiro.parser.StatementParser;
 import com.cynigram.yashiro.parser.statement.ParserBuilders;
 import com.cynigram.yashiro.parser.statement.StatementMatch;
@@ -11,7 +12,7 @@ import com.cynigram.yashiro.parser.statement.StatementMatchMap;
 import com.google.common.base.Objects;
 import org.codehaus.jparsec.functors.Map;
 
-public class ForStatement
+public class ForStatement implements Statement
 {
     public static class ForStmtNode extends StmtNode
     {
@@ -110,7 +111,7 @@ public class ForStatement
         }
     }
 
-    public StatementParser getParser ()
+    public StatementParser parser ()
     {
         return ParserBuilders
                 .statementWithBody("com.cynigram.yashiro.statements", "for")

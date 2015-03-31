@@ -2,10 +2,14 @@ package com.cynigram.yashiro.parser;
 
 import com.google.common.base.Objects;
 
+import java.io.Serializable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class Fragment<T>
+public class Fragment<T extends Serializable> implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private final T value;
     private final Tag<? super T> tag;
 
